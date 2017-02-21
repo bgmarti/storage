@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>HCM SemSearch : Useful code patterns</title>
+        <link rel="stylesheet" href="styles/site.css" type="text/css" />
+        <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+
+    <body class="theme-default aui-theme-default">
+        <div id="page">
+            <div id="main" class="aui-page-panel">
+                <div id="main-header">
+                    <div id="breadcrumb-section">
+                        <ol id="breadcrumbs">
+                            <li class="first">
+                                <span><a href="index.html">HCM SemSearch</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="How-To-articles_244383972.html">How-To articles</a></span>
+                            </li>
+                                                    <li>
+                                <span><a href="ADF-good-practices---part-1_197794574.html">ADF good practices - part 1</a></span>
+                            </li>
+                                                </ol>
+                    </div>
+                    <h1 id="title-heading" class="pagetitle">
+                                                <span id="title-text">
+                            HCM SemSearch : Useful code patterns
+                        </span>
+                    </h1>
+                </div>
+
+                <div id="content" class="view">
+                    <div class="page-metadata">
+                        
+        
+    
+        
+    
+        
+        
+            Created by <span class='author'> Marcin Rybak</span>, last modified on Sep 10, 2016
+                        </div>
+                    <div id="main-content" class="wiki-content group">
+                    <div class="table-wrap"><table class="confluenceTable"><tbody><tr><th class="confluenceTh">Usecase</th><th class="confluenceTh">Implementation</th></tr><tr><td class="confluenceTd">Call application module logic, preceded by fetching module from poll and followed by returning module to pool</td><td class="confluenceTd"><p><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import oracle.jbo.ApplicationModule;
+public interface SafeApplicationModuleLogicExecutor {
+    
+    /**
+     * 1. Fetches application module from the pool
+     * 2. Executes application module business logic povided by {@link Executable#execute}
+     * 3. Releases application module
+     * 
+     * @param &lt;M&gt;   application module type
+     * @param &lt;R&gt;   returned data type
+     * @param executable
+     * @return result returned by {@link Executable#execute}
+     */
+    public &lt;M extends ApplicationModule, R&gt; R execute(Executable&lt;M,R&gt; executable);
+    
+    interface Executable&lt;M extends ApplicationModule, R&gt; {
+        
+        /**
+         * Executes business logic provided by applicationModule
+         *
+         * @param applicationModule
+         * @return result of applicationModule mehod call 
+         */
+        R execute(M applicationModule);
+    }
+}</pre>
+</div></div><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import oracle.jbo.ApplicationModule;
+import oracle.jbo.client.Configuration;
+ 
+public class DefaultSafeApplicationModuleLogicExecutor implements SafeApplicationModuleLogicExecutor {
+    private final String moduleName;
+    private final String configName;
+    public DefaultSafeApplicationModuleLogicExecutor(Class&lt;? extends ApplicationModule&gt; moduleClass) {
+        this(new ModuleNameBuilder().build(moduleClass),
+             new ModuleConfigNameBuilder().build(moduleClass));
+    }
+    
+    DefaultSafeApplicationModuleLogicExecutor(String moduleName,
+                                                     String configName) {
+        this.moduleName = moduleName;
+        this.configName = configName;
+    }
+
+    public &lt;M extends ApplicationModule, R&gt; R execute(Executable&lt;M, R&gt; executable) {
+        M applicationModule =
+            (M)Configuration.createRootApplicationModule(moduleName,
+                                                         configName);
+        try {
+            return executable.execute(applicationModule);
+        } finally {
+            Configuration.releaseRootApplicationModule(applicationModule,
+                                                       false);
+        }
+    }
+ 
+    static class ModuleNameBuilder {
+    
+    		final static String TEMPLATE = &quot;{0}.applicationModule.{1}&quot;;
+    
+    		/**
+     		  *  Builds module name in the following format:
+     		  * &quot;{modulePackageName}.applicationModule.{moduleSimpleClassName}&quot;
+     		  *
+     		  *
+     		  * @param moduleClass
+     	      * @return
+    		  */
+   			 public String build(Class&lt;? extends ApplicationModule&gt; moduleClass){
+        			String packageName = moduleClass.getPackage().getName();
+        			String simpleClassName = moduleClass.getSimpleName();
+        			return MessageFormat.format(TEMPLATE, packageName, simpleClassName);
+    		 }  
+	}
+ 
+    class ModuleConfigNameBuilder {
+
+    		final static String TEMPLATE = &quot;{0}Local&quot;;
+
+    		/**
+     		  *  Builds module config name in the following format:
+     		  * &quot;{moduleSimpleClassName}Local&quot;
+     		  *
+     		  *
+              * @param moduleClass
+     		  * @return
+     		  */
+    		  public String build(Class&lt;? extends ApplicationModule&gt; moduleClass) {
+        				String simpleClassName = moduleClass.getSimpleName();
+        				return MessageFormat.format(TEMPLATE, simpleClassName);
+    		  }
+	}
+}</pre>
+</div></div></p></td></tr><tr><td class="confluenceTd"><span>Call view object query, preceded by applying view criteria and followed by removing those criterias</span></td><td class="confluenceTd"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import java.util.List;
+import oracle.jbo.ViewObject;
+
+public interface SafeFilteredViewObjectQueryExecutor {
+
+  /**
+   * 1. Applies given view criterias on view object
+   * 2. Executes view object query logic povided by {@link Executable#execute}
+   * 3. Removes applied view  criteria from view object
+   * 
+   * @param &lt;R&gt;   returned data type
+   * @param &lt;V&gt;   view object type
+   * @param executable  code to execute on view object with applied viewCriterias
+   * @param viewObject  
+   * @param viewCriteriasNames  list of view critria names to apply on view object and remove after executable code is executed
+   * @return result returned by {@link Executable#execute}
+   */
+  public &lt;V extends ViewObject, R&gt; R execute(Executable&lt;V, R&gt; executable,
+                                             V viewObject,
+                                             List&lt;String&gt; viewCriteriasNames);
+
+  interface Executable&lt;V extends ViewObject, R&gt; {
+    /**
+     * Executes query on viewObject
+     *
+     * @param viewObject
+     * @return result of viewObject query
+     */
+    R execute(V viewObject);
+  }
+}</pre>
+</div></div><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import java.util.List;
+import oracle.jbo.ViewCriteria;
+import oracle.jbo.ViewCriteriaManager;
+import oracle.jbo.ViewObject;
+
+public class DefaultSafeFilteredViewObjectQueryExecutor implements SafeFilteredViewObjectQueryExecutor {
+
+  public &lt;V extends ViewObject, R&gt; R execute(Executable&lt;V, R&gt; executable,
+                                             V viewObject,
+                                             List&lt;String&gt; viewCriteriasNames) {
+    final ViewCriteriaManager viewCriteriaManager =
+      viewObject.getViewCriteriaManager();
+    appendViewCriterias(viewObject, viewCriteriaManager, viewCriteriasNames);
+    R queryResult = null;
+    try {
+      queryResult = executable.execute(viewObject);
+    } finally {
+      removeApplyViewCriterias(viewCriteriaManager, viewCriteriasNames);
+    }
+    return queryResult;
+  }
+
+  private void appendViewCriterias(ViewObject viewObject,
+                                   ViewCriteriaManager viewCriteriaManager,
+                                   List&lt;String&gt; viewCriteriasNames) {
+    for (String viewCriteriaName : viewCriteriasNames) {
+      ViewCriteria vc = viewCriteriaManager.getViewCriteria(viewCriteriaName);
+      viewObject.applyViewCriteria(vc,true);
+    }
+  }
+
+  private void removeApplyViewCriterias(ViewCriteriaManager viewCriteriaManager,
+                                        List&lt;String&gt; viewCriteriasNames) {
+    for (String viewCriteriaName : viewCriteriasNames) {
+      viewCriteriaManager.removeApplyViewCriteriaName(viewCriteriaName);
+    }
+  }
+}</pre>
+</div></div></td></tr><tr><td colspan="1" class="confluenceTd">Fetch one and only one row from view object query</td><td colspan="1" class="confluenceTd"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import oracle.jbo.Row;
+import oracle.jbo.ViewObject;
+
+public interface SingleRowFinder {
+    /**
+     * Performs query on given view object, expecting that one and only one row will be found -
+     * if no row is found or more than one row is found- throws an exception
+     *
+     * @param &lt;R&gt; row implementation class
+     * @param &lt;V&gt; view object implementation class
+     * @param vo view object instance
+     * @return only one Row instance
+     * @throws NoRowFoundException if no row found
+     * @throws MoreThanOneRowFoundException if more than one row found
+     *
+     */
+    &lt;R extends Row, V extends ViewObject&gt; R find(V vo) throws NoRowFoundException,
+                                                              MoreThanOneRowFoundException;
+}</pre>
+</div></div><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import oracle.jbo.Row;
+import oracle.jbo.ViewObject;
+
+public class DefaultSingleRowFinder implements SingleRowFinder {
+    public &lt;R extends Row,V extends ViewObject&gt; R find(V vo) throws NoRowFoundException,
+                                                                     MoreThanOneRowFoundException {
+        vo.executeQuery();
+        
+        if(vo.hasNext()){
+            R row = (R)vo.next();
+            if(vo.hasNext()){
+                throw new MoreThanOneRowFoundException(vo);
+            }
+            
+            return row;
+        }
+         
+        throw new NoRowFoundException(vo);  
+    }
+}</pre>
+</div></div></td></tr><tr><td colspan="1" class="confluenceTd"><span>Fetch multiple rows as list from view object query</span></td><td colspan="1" class="confluenceTd"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import java.util.List;
+import oracle.jbo.Row;
+import oracle.jbo.ViewObject;
+public interface MultipleRowsFinder {
+  
+  &lt;R extends Row, V extends ViewObject&gt; List&lt;R&gt; find(V vo);
+}</pre>
+</div></div><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import java.util.ArrayList;
+import java.util.List;
+import oracle.jbo.Row;
+import oracle.jbo.ViewObject;
+
+public class DefaultMultipleRowsFinder implements MultipleRowsFinder {
+  public &lt;R extends Row, V extends ViewObject&gt; List&lt;R&gt; find(V vo) {
+    List&lt;R&gt; rows = new ArrayList&lt;R&gt;();
+    
+    vo.executeQuery();
+    while(vo.hasNext()){
+        R row = (R)vo.next();
+        rows.add(row);
+    }
+    
+    return rows;
+  }
+}</pre>
+</div></div></td></tr><tr><td colspan="1" class="confluenceTd">Find translation in one of the resource bundles</td><td colspan="1" class="confluenceTd"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ResourceBundle;
+import oracle.apps.fnd.applcore.log.AppsLogger;
+import oracle.javatools.resourcebundle.BundleFactory;
+import org.apache.commons.lang.StringUtils;
+
+class TranslationResourceFetcher {
+
+private final List&lt;ResourceBundle&gt; bundlesList;
+
+public TranslationResourceFetcher(List&lt;String&gt; bundlesNames) {
+ 	this(createBundlesList(bundlesNames));
+ }
+
+TranslationResourceFetcher(List&lt;ResourceBundle&gt; bundlesList) {
+
+ 	if (bundlesList == null || bundlesList.isEmpty()) {
+ 		throw new IllegalArgumentException(&quot;No bundles provided&quot;);
+ 	}
+	this.bundlesList = bundlesList;
+ }
+
+/**
+ * return the translation for given key from resource bundles
+ * if no translation found - returns empty string
+ *
+ * @param key
+ * @return
+ *
+ */
+ public String fetch(String key) {
+ 
+ 	for (ResourceBundle bundle : bundlesList) { 
+ 			if (bundle.containsKey(key)) {
+ 				return bundle.getString(key);
+ 			}
+    }
+
+	if (AppsLogger.isEnabled(AppsLogger.WARNING)) {
+ 		AppsLogger.write(this.getClass(),
+		 MessageFormat.format(&quot;No translation found for key:{0} in bundles: {1}&quot;,
+		 key, bundlesList), AppsLogger.WARNING);
+	}
+	return StringUtils.EMPTY;
+ }
+
+private static List&lt;ResourceBundle&gt; createBundlesList(List&lt;String&gt; bundleNames) {
+ 	List&lt;ResourceBundle&gt; bundlesList = new ArrayList&lt;ResourceBundle&gt;();
+	 
+ 	for (String bundleName : bundleNames) {
+		bundlesList.add(BundleFactory.getBundle(bundleName));
+ 	}
+ 	return bundlesList;
+ }
+}</pre>
+</div></div></td></tr><tr><td colspan="1" class="confluenceTd">Access current &lt;af:iterator var=&quot;row&quot; ... &gt; row in managed bean</td><td colspan="1" class="confluenceTd"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: java; gutter: false; theme: DJango" data-theme="DJango">import javax.el.ExpressionFactory;
+import javax.el.ValueExpression;
+import javax.faces.context.FacesContext;
+import oracle.jbo.Row;
+import oracle.jbo.uicli.binding.JUCtrlHierNodeBinding;
+
+class CurrentRowProvider {
+    private static final String ROW_VARIABLE = &quot;#{row}&quot;;
+
+    public &lt;R extends Row&gt; R provide() {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        ExpressionFactory ef = ctx.getApplication().getExpressionFactory();
+        ValueExpression ve =
+            ef.createValueExpression(ctx.getELContext(), ROW_VARIABLE,
+                                     JUCtrlHierNodeBinding.class);
+        JUCtrlHierNodeBinding node =
+            (JUCtrlHierNodeBinding)ve.getValue(ctx.getELContext());
+        R row = (R)node.getRow();
+        return row;
+    }
+}</pre>
+</div></div></td></tr></tbody></table></div>
+                    </div>
+
+                    
+                                                      
+                </div>             </div> 
+            <div id="footer" role="contentinfo">
+                <section class="footer-body">
+                    <p>Document generated by Confluence on Sep 13, 2016 22:07</p>
+                    <div id="footer-logo"><a href="http://www.atlassian.com/">Atlassian</a></div>
+                </section>
+            </div>
+        </div>     </body>
+</html>
