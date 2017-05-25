@@ -1,1 +1,77 @@
-19124051101111001063347480 Pruchniewicz Anna konto mojej Ani z gory dziekuje
+prof. dr hab. Czesław Kapusta:
+Chciałbym nazwiązać do dyskusji ktora przed chwilą miała miejsce - przejścia nieciągłe, z separacją fazową w materiałach których te przejścia dotyczą.
+Czy istnieje jakaś analogia w pana badaniach do separacji fazowej, czy dałoby się zbadać czy tam jest dynamiczna separacja fazowa i czy gronowanie 
+ma z tym jakiś związek.
+
+Odpowiedź:
+Na pewno udało się znaleźć minimalną wartość współczynnika gronowania, która była wymagana aby w ogóle dwuwęzłowy proces się aktywował.
+Mówilibyśmy tutaj o fazie gdzie wszystkie węzły będą w stanie S.
+
+prof. dr hab. Czesław Kapusta:
+Czy w tych różnych modelach, przy tych różnych parametrach, czy dałoby się znaleźć jakieś analogie do fizycznych parametrów bądź społecznych.
+Powiedział pan że gronowanie nie pokazuje zależności, natomiast jeśli chodzi o separację fazową w fizyce, to jeśli energia swobodna ma silną zależność od 
+jakiegoś parametru termodynamicznego, to układ woli się rozpaść na dwa.
+Czy w tych symulacjach pan te zależności obserwował i czy pod tym kątem można by je śledzić jeśli pan nie badał ich?
+
+Odpowiedź:
+Zależność od współczynnika gronowania widzieliśmy w przypadku procesu opartego na regułach modelu "z sąsiedztwem", gdzie do rozprzestrzeniania
+się potrzebne są triady w sieci. Natomiast bardziej to nie było badane w pracy.
+
+prof. dr hab Czesław Kapusta:
+Sądzi pan czy warto by było, można by było coś takiego badać?
+
+Odpowiedź:
+Wydaje mi się że nie..
+
+prof. dr hab. Katarzyna Sznajd-Weron:
+Chciałabym pociagnąć temat, tylko może inaczej zadam to pytanie. Jak pan ma nieciagłe przejście fazowe, to to co jest typowe dla nieciągłego przejścia fazowego to m.in współistnienie 
+dwóch faz (np. prosty diagram fazowy dla wody - są stany przechłodzone i przegrzane). 
+Czyli jest taki obszar metastabilności, współistnienia dwóch faz - przy przejściach nieciągłych to z reguły występuje. 
+I też związana z tym jest tzw. histreza - czyli to od jakich warunków początkowych pan wyjdzie, jaki stan końcowy pan ostatecznie otrzymuje.
+Natomiast pytanie podstawowe jest takie: po pierwsze jakie dwie fazy pan w ogóle ma tutaj, czyli o przejściu pomiędzy jakimi dwoma fazami pan mówi, po drugie, czy faktycznie 
+skoro ma pan przejście fazowe nieciągłe, obserwuje pan współistnienie tych dwóch faz w jakimkolwiek zakresie parametrów.
+
+Odpowiedź:
+Coś takiego było obserwowane dla sieci regularnej w modelu "z sąsiedztwem" vs model wyborcy, gdzie w zależności od prawdopodobieństwa procesu S. 
+Przedstawiałem taki wykres - tam tą wartością graniczną było p=0,46. Dla symulacji które zostały przeprowadzone dla tej wartości p wymagany był dużo dłuższy czas, a na dodatek nie 
+otrzymaliśmy homogenicznego stanu tak jak po lewej i po prawej stronie punktu krytycznego. Obserwowaliśmy zatem taki efekt w zależności od prawdopodobieństwa procesu S, natomiast takiej zależności od 
+współczynnika gronowania nie obserwowaliśmy.
+
+
+prof. dr Zdzisław Burda:
+Chciałem zapytać na czym niestacjonarność polega. W teorii procesów Markova, łańcuchów Markova odróżnia się stany stacjonarne od tzw. pochłaniających.
+Wygląda na to że stan, w którym np. stan końcowy się nie zmienia, to jest bardziej adekwatnie nazwać go pochłaniającym. 
+Stan stacjonarny to może być taki stan , który się w każdym kroku zmienia, ale jest rozrzucony wtedy z prawdopodobieństwem.
+I jeżeli widzi pan że stan jest niestacjonarny, to powinien pan tak samo widzieć w swoim łańcuchu Markova taką wartość która leży na kółku jednostkowym
+i jest różna od jedynki. Czy pan coś takiego widział?
+
+
+Odpowiedź:
+U mnie to była prosta analiza polegająca na obliczeniu pochodnej po czasie udziału węzłów danego typu w danej chwili symulacji w iluś czasowych krokach i 
+sprawdzeniu czy wartość tej pochodnej jest równa zeru czy też różna.
+
+
+prof. dr Zdzisław Burda:
+Ale to jeszcze nie rozstrzyga, bo to mogłoby fluktuować sobie z pewnym rozkładem prawdopodobieństwa.
+To jest bardzo trudne do rozstrzygnięcia czy to jest coś co sie pojawia z pewnym rozkładem prawdopodobieństwa ale jest jednak stacjonarne, czy jest to rzeczywiście jakiś efekt niestacjonarności,
+migotania na przykład?
+
+Odpowiedź:
+Nie zostało to bardziej zbadane - w pracy skupiłem się na badaniu sytuacji kiedy ta faza została osiągnięta.
+
+
+prof. dr hab. Ryszard Kutner - ???????????????????
+Pan w swojej prezentacji (?)  wspomniał o styuacji z zablokowaną możliwością rozbudowy zarówno S jak i D procesu.
+Czy pan to kontroluje? Czy to jest powtarzalne
+Co to jest za stan czy to jest pojedyncza realizacja czy to jest ten mechanizm tego trojkąta, gdzie nie ma możliwości rozprzestrzeniania się tej fazy?
+
+Odpowiedź:
+Tak, to była jednorazowa sytuacja.
+
+
+prof. dr hab. inż. Kazimierz Różański:
+Zainteresował mnie model wyborcy. Czy byłby pan w stanie mi powiedzieć ile ma on wspólnego z rzeczywistą siecią dynamiczną wyborców w poszczególnych krajach?
+
+Odpowiedź:
+Wydaje mi się że nie ma, generalnie ludzie raczej nie przyjmują opinii od jednej osoby, stąd własnie powstały takie modele jak model Sznajdów - 
+musi istnieć wartość progowa aby ta opinia się zmieniła - dwóch bądź więcej.
