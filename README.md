@@ -16,3 +16,4 @@ ClassificationWhy?Multiple dispatchStatic binding vs dynamic bindingInstanceOf D
 
 ClassificationWhy?How does it look like?Template Method DemoDisadvantagesJava API
 
+What's it do?When to use it?How does it look like?How not to use it
