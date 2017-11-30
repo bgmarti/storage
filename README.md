@@ -6,3 +6,6 @@ https://barro.github.io/2016/02/a-succesful-git-branching-model-considered-harmf
 
 
  
+https://www.microsofthup.com/hupemea1/orderdetail.aspx?receipt_id=553392165&culture=pl-PL&local=false
+
+64WHV-JNXBC-RFR9X-FW6HT-2377H
