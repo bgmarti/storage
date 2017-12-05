@@ -4,4 +4,4 @@ http://www.mgsm.pl/pl/porownanie/honor-8-vs-htc-onea9-vs-alcatel-idol4/
 
 https://barro.github.io/2016/02/a-succesful-git-branching-model-considered-harmful/
 
-
+74124022941111001066572508 
